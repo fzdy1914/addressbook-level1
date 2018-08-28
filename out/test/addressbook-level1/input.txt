@@ -62,6 +62,25 @@
   find Charlie Betsy
 
 ##########################################################
+# test edit command
+##########################################################
+
+  # should catch invalid index
+  list 
+  edit 0 p/222222 e/benchoo@nus.edu.sg
+  edit 3 p/222222 e/benchoo@nus.edu.sg
+ 
+  # should catch invalid args format
+  edit
+  edit 1 p/222222@nus.edu.sg 
+  edit 1 e/1122222
+
+  #should edit work
+  edit 1 p/11222222
+  edit 1 e/11222222@nus.edu.sg
+  edit p/222222 e/benchoo@nus.edu.sg
+
+##########################################################
 # test delete person command
 ##########################################################
 
