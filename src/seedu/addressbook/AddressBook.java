@@ -386,6 +386,8 @@ public class AddressBook {
             return executeListAllPersonsInAddressBook();
         case COMMAND_DELETE_WORD:
             return executeDeletePerson(commandArgs);
+        case COMMAND_EDIT_WORD:
+            return executeEditPerson(commandArgs);
         case COMMAND_CLEAR_WORD:
             return executeClearAddressBook();
         case COMMAND_HELP_WORD:
@@ -510,15 +512,22 @@ public class AddressBook {
      */
     private static String executeEditPerson(String commandArgs) {
         if (!isEditPersonArgsValid(commandArgs)) {
-            return getMessageForInvalidCommandInput(COMMAND_EDIT_WORD, getUsageInfoForDeleteCommand());
+            return getMessageForInvalidCommandInput(COMMAND_EDIT_WORD, getUsageInfoForEditCommand());
         }
-        final int targetVisibleIndex = extractTargetIndexFromDeletePersonArgs(commandArgs);
+        final int targetVisibleIndex = extractTargetIndexFromEditPersonArgs(commandArgs);
+        final Optional<String> newPhone = extractNewPhoneFromEditPersonArgs(commandArgs);
+        final Optional<String> newEmail = extractNewEmailFromEditPersonArgs(commandArgs);
         if (!isDisplayIndexValidForLastPersonListingView(targetVisibleIndex)) {
             return MESSAGE_INVALID_PERSON_DISPLAYED_INDEX;
         }
         final String[] targetInModel = getPersonByLastVisibleIndex(targetVisibleIndex);
+        if (!deletePersonFromAddressBook(targetInModel)){
+            return MESSAGE_PERSON_NOT_IN_ADDRESSBOOK;
+        } else {
+            addPersonToAddressBook();
+        }
         return deletePersonFromAddressBook(targetInModel) ? getMessageForSuccessfulDelete(targetInModel) // success
-                : MESSAGE_PERSON_NOT_IN_ADDRESSBOOK; // not found
+                :  // not found
     }
 
     /**
@@ -527,13 +536,31 @@ public class AddressBook {
      * @param rawArgs raw command args string for the delete person command
      * @return whether the input args string is valid
      */
+    //TODO
     private static boolean isEditPersonArgsValid(String rawArgs) {
-        try {
-            final int extractedIndex = Integer.parseInt(rawArgs.trim()); // use standard libraries to parse
-            return extractedIndex >= DISPLAYED_INDEX_OFFSET;
-        } catch (NumberFormatException nfe) {
+        /*final String matchAnyPersonDataPrefix = PERSON_DATA_PREFIX_PHONE + '|' + PERSON_DATA_PREFIX_EMAIL;
+        final String[] splitArgs = rawArgs.trim().split(matchAnyPersonDataPrefix);
+        if(splitArgs.length == 3){
+            try {
+                final int extractedIndex = Integer.parseInt(splitArgs[0].trim()); // use standard libraries to parse
+                //return extractedIndex >= DISPLAYED_INDEX_OFFSET;
+            } catch (NumberFormatException nfe) {
+                return false;
+            }
+            final int indexOfPhonePrefix = rawArgs.indexOf(PERSON_DATA_PREFIX_PHONE);
+            final int indexOfEmailPrefix = rawArgs.indexOf(PERSON_DATA_PREFIX_EMAIL);
+            int indexOfFirstPrefix = Math.min(indexOfEmailPrefix, indexOfPhonePrefix);
+            //return rawArgs.substring(0, indexOfFirstPrefix).trim();
+           return true;
+
+
+        } else if (splitArgs.length == 3) {
+
+        } else {
             return false;
-        }
+        }*/
+        return true;
+
     }
 
     /**
@@ -578,6 +605,60 @@ public class AddressBook {
      */
     private static int extractTargetIndexFromDeletePersonArgs(String rawArgs) {
         return Integer.parseInt(rawArgs.trim());
+    }
+
+    /**
+     * Extracts the target's index from the raw delete person args string
+     *
+     * @param rawArgs raw command args string for the delete person command
+     * @return extracted index
+     */
+    private static int extractTargetIndexFromEditPersonArgs(String rawArgs) {
+        final String matchAnyPersonDataPrefix = PERSON_DATA_PREFIX_PHONE + '|' + PERSON_DATA_PREFIX_EMAIL;
+        final String[] splitArgs = rawArgs.trim().split(matchAnyPersonDataPrefix);
+        return Integer.parseInt(splitArgs[0].trim());
+    }
+
+    /**
+     * Extracts the target's index from the raw delete person args string
+     *
+     * @param rawArgs raw command args string for the delete person command
+     * @return extracted index
+     */
+    private static Optional<String> extractNewPhoneFromEditPersonArgs(String rawArgs) {
+        final int indexOfPhonePrefix = rawArgs.indexOf(PERSON_DATA_PREFIX_PHONE);
+        final int indexOfEmailPrefix = rawArgs.indexOf(PERSON_DATA_PREFIX_EMAIL);
+
+        if(indexOfPhonePrefix == -1) {
+            return Optional.empty();
+        } else if (indexOfEmailPrefix == -1 || indexOfEmailPrefix < indexOfPhonePrefix) {
+            return Optional.of(removePrefixSign(rawArgs.substring(indexOfPhonePrefix, rawArgs.length()).trim(),
+                    PERSON_DATA_PREFIX_PHONE));
+        } else {
+            return Optional.of(removePrefixSign(rawArgs.substring(indexOfPhonePrefix, indexOfEmailPrefix).trim(),
+                    PERSON_DATA_PREFIX_PHONE));
+        }
+    }
+
+    /**
+     * Extracts the target's index from the raw delete person args string
+     *
+     * @param rawArgs raw command args string for the delete person command
+     * @return extracted index
+     */
+    private static Optional<String> extractNewEmailFromEditPersonArgs(String rawArgs) {
+        final int indexOfPhonePrefix = rawArgs.indexOf(PERSON_DATA_PREFIX_PHONE);
+        final int indexOfEmailPrefix = rawArgs.indexOf(PERSON_DATA_PREFIX_EMAIL);
+
+        if(indexOfEmailPrefix == -1) {
+            return Optional.empty();
+        } else if (indexOfPhonePrefix == -1 || indexOfEmailPrefix > indexOfPhonePrefix) {
+            return Optional.of(removePrefixSign(rawArgs.substring(indexOfEmailPrefix, rawArgs.length()).trim(),
+                    PERSON_DATA_PREFIX_EMAIL));
+        } else {
+            return Optional.of(removePrefixSign(rawArgs.substring(indexOfEmailPrefix, indexOfPhonePrefix).trim(),
+                    PERSON_DATA_PREFIX_EMAIL));
+        }
     }
 
     /**
