@@ -125,7 +125,7 @@ public class AddressBook {
     private static final String COMMAND_EDIT_WORD = "edit";
     private static final String COMMAND_EDIT_DESC = "Edits a person identified by the index number used in "
                                                   + "the last find/list call.";
-    private static final String COMMAND_EDIT_PARAMETER = "INDEX"
+    private static final String COMMAND_EDIT_PARAMETER = "INDEX "
                                                         + PERSON_DATA_PREFIX_PHONE + "PHONE_NUMBER "
                                                         + PERSON_DATA_PREFIX_EMAIL + "EMAIL";
     private static final String COMMAND_EDIT_EXAMPLE = COMMAND_EDIT_WORD + " 1"
@@ -455,11 +455,11 @@ public class AddressBook {
     }
 
     /**
-     * Constructs a feedback message for a successful add person command execution.
+     * Constructs a feedback message for a successful edit person command execution.
      *
-     * @see #executeAddPerson(String)
-     * @param editedPerson person who was successfully added
-     * @return successful add person feedback message
+     * @see #executeEditPerson(String)
+     * @param editedPerson person who was successfully edited
+     * @return successful edit person feedback message
      */
     private static String getMessageForSuccessfulEditPerson(String[] editedPerson) {
         return String.format(MESSAGE_EDITED,
@@ -518,7 +518,7 @@ public class AddressBook {
     }
 
     /**
-     * Deletes person identified using last displayed index.
+     * Edits person identified using last displayed index.
      *
      * @param commandArgs full command args string from the user
      * @return feedback display message for the operation result
@@ -549,35 +549,39 @@ public class AddressBook {
     }
 
     /**
-     * Checks validity of delete person argument string's format.
+     * Checks validity of edit person argument string's format.
      *
-     * @param rawArgs raw command args string for the delete person command
+     * @param rawArgs raw command args string for the edit person command
      * @return whether the input args string is valid
      */
-    //TODO
     private static boolean isEditPersonArgsValid(String rawArgs) {
-        /*final String matchAnyPersonDataPrefix = PERSON_DATA_PREFIX_PHONE + '|' + PERSON_DATA_PREFIX_EMAIL;
+        final String matchAnyPersonDataPrefix = PERSON_DATA_PREFIX_PHONE + '|' + PERSON_DATA_PREFIX_EMAIL;
         final String[] splitArgs = rawArgs.trim().split(matchAnyPersonDataPrefix);
-        if(splitArgs.length == 3){
-            try {
-                final int extractedIndex = Integer.parseInt(splitArgs[0].trim()); // use standard libraries to parse
-                //return extractedIndex >= DISPLAYED_INDEX_OFFSET;
-            } catch (NumberFormatException nfe) {
+        final int indexOfPhonePrefix = rawArgs.indexOf(PERSON_DATA_PREFIX_PHONE);
+        final int indexOfEmailPrefix = rawArgs.indexOf(PERSON_DATA_PREFIX_EMAIL);
+        try {
+            final int extractedIndex = Integer.parseInt(splitArgs[0].trim()); // use standard libraries to parse
+            if(extractedIndex < DISPLAYED_INDEX_OFFSET) {
                 return false;
             }
-            final int indexOfPhonePrefix = rawArgs.indexOf(PERSON_DATA_PREFIX_PHONE);
-            final int indexOfEmailPrefix = rawArgs.indexOf(PERSON_DATA_PREFIX_EMAIL);
-            int indexOfFirstPrefix = Math.min(indexOfEmailPrefix, indexOfPhonePrefix);
-            //return rawArgs.substring(0, indexOfFirstPrefix).trim();
-           return true;
-
-
-        } else if (splitArgs.length == 3) {
-
-        } else {
+        } catch (NumberFormatException nfe) {
             return false;
-        }*/
-        return true;
+        }
+        if(splitArgs.length == 3){
+
+            if(indexOfEmailPrefix == -1 || indexOfPhonePrefix == - 1) {
+                return false;
+            }
+            return isPersonEmailValid(extractNewEmailFromEditPersonArgs(rawArgs).get())
+                    && isPersonPhoneValid(extractNewPhoneFromEditPersonArgs(rawArgs).get());
+        } else if (splitArgs.length == 2) {
+            if(indexOfEmailPrefix != -1) {
+                return isPersonEmailValid(extractNewEmailFromEditPersonArgs(rawArgs).get());
+            } else {
+                return isPersonPhoneValid(extractNewPhoneFromEditPersonArgs(rawArgs).get());
+            }
+        }
+        return false;
 
     }
 
@@ -626,9 +630,9 @@ public class AddressBook {
     }
 
     /**
-     * Extracts the target's index from the raw delete person args string
+     * Extracts the target's index from the raw edit person args string
      *
-     * @param rawArgs raw command args string for the delete person command
+     * @param rawArgs raw command args string for the edit person command
      * @return extracted index
      */
     private static int extractTargetIndexFromEditPersonArgs(String rawArgs) {
@@ -638,10 +642,10 @@ public class AddressBook {
     }
 
     /**
-     * Extracts the target's index from the raw delete person args string
+     * Extracts the target's new phone from the raw edit person args string
      *
-     * @param rawArgs raw command args string for the delete person command
-     * @return extracted index
+     * @param rawArgs raw command args string for the edit person command
+     * @return extracted new phone
      */
     private static Optional<String> extractNewPhoneFromEditPersonArgs(String rawArgs) {
         final int indexOfPhonePrefix = rawArgs.indexOf(PERSON_DATA_PREFIX_PHONE);
@@ -659,10 +663,10 @@ public class AddressBook {
     }
 
     /**
-     * Extracts the target's index from the raw delete person args string
+     * Extracts the target's new email from the raw edit person args string
      *
-     * @param rawArgs raw command args string for the delete person command
-     * @return extracted index
+     * @param rawArgs raw command args string for the edit person command
+     * @return extracted new email
      */
     private static Optional<String> extractNewEmailFromEditPersonArgs(String rawArgs) {
         final int indexOfPhonePrefix = rawArgs.indexOf(PERSON_DATA_PREFIX_PHONE);
