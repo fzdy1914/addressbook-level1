@@ -66,6 +66,7 @@ public class AddressBook {
      * =========================================================================
      */
     private static final String MESSAGE_ADDED = "New person added: %1$s, Phone: %2$s, Email: %3$s";
+    private static final String MESSAGE_EDITED = "Person edited: %1$s, Phone: %2$s, Email: %3$s";
     private static final String MESSAGE_ADDRESSBOOK_CLEARED = "Address book has been cleared!";
     private static final String MESSAGE_COMMAND_HELP = "%1$s: %2$s";
     private static final String MESSAGE_COMMAND_HELP_PARAMETERS = "\tParameters: %1$s";
@@ -454,6 +455,18 @@ public class AddressBook {
     }
 
     /**
+     * Constructs a feedback message for a successful add person command execution.
+     *
+     * @see #executeAddPerson(String)
+     * @param editedPerson person who was successfully added
+     * @return successful add person feedback message
+     */
+    private static String getMessageForSuccessfulEditPerson(String[] editedPerson) {
+        return String.format(MESSAGE_EDITED,
+                getNameFromPerson(editedPerson), getPhoneFromPerson(editedPerson), getEmailFromPerson(editedPerson));
+    }
+
+    /**
      * Finds and lists all persons in address book whose name contains any of the argument keywords.
      * Keyword matching is case sensitive.
      *
@@ -524,10 +537,15 @@ public class AddressBook {
         if (!deletePersonFromAddressBook(targetInModel)){
             return MESSAGE_PERSON_NOT_IN_ADDRESSBOOK;
         } else {
-            addPersonToAddressBook();
+            if(newPhone.isPresent()){
+                targetInModel[PERSON_DATA_INDEX_PHONE] = newPhone.get();
+            }
+            if(newEmail.isPresent()){
+                targetInModel[PERSON_DATA_INDEX_EMAIL] = newEmail.get();
+            }
+            addPersonToAddressBook(targetInModel);
+            return getMessageForSuccessfulEditPerson(targetInModel);
         }
-        return deletePersonFromAddressBook(targetInModel) ? getMessageForSuccessfulDelete(targetInModel) // success
-                :  // not found
     }
 
     /**
